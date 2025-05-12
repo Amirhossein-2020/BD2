@@ -1,0 +1,170 @@
+\echo '1) Quali sono il nome, la data di inizio e la data di fine\n   dei WP del progetto "Pegasus"?\n'
+
+select 
+	wp.id as id, 
+	wp.nome as nome, 
+	wp.inizio as inizio, 
+	wp.fine as fine
+from Progetto p, WP wp
+where p.nome = 'Pegasus' 
+  and wp.progetto = p.id;
+
+
+\echo '2) Quali sono il nome, il cognome e la posizione degli\n   strutturati che hanno almeno una attivita'' nel progetto\n   "Pegasus", ordinati per cognome decrescente?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome,
+	pers.posizione as posizione
+from Progetto prj, AttivitaProgetto a, Persona pers
+where prj.nome = 'Pegasus'
+  and a.progetto = prj.id
+  and a.persona = pers.id
+order by pers.cognome desc;
+
+
+\echo '3) Quali sono il nome, il cognome e la posizione degli\n    strutturati che hanno piu'' di una attivita'' nel progetto\n    "Pegasus"?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome,
+	pers.posizione as posizione
+from Persona pers, AttivitaProgetto a1, AttivitaProgetto a2, Progetto prj
+where prj.nome = 'Pegasus'
+  and a1.progetto = prj.id
+  and a2.progetto = prj.id
+  and a1.id <> a2.id
+  and a1.persona = pers.id
+  and a2.persona = pers.id;
+
+
+\echo '4) Quali sono il nome e il cognome dei Professori Ordinari\n    che hanno fatto almeno una assenza per malattia?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, Assenza a
+where a.persona = pers.id
+  and a.tipo = 'Malattia'
+  and pers.posizione = 'Professore Ordinario';
+
+
+\echo '5) Quali sono il nome e il cognome dei Professori Ordinari\n    che hanno fatto piu'' di una assenza per malattia?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, Assenza a1, Assenza a2
+where a1.persona = pers.id
+  and a2.persona = pers.id
+  and a1.id <> a2.id
+  and a1.tipo = 'Malattia'
+  and a2.tipo = a1.tipo
+  and pers.posizione = 'Professore Ordinario';
+
+
+\echo '6) Quali sono il nome e il cognome dei Ricercatori che hanno\n   almeno un impegno per didattica?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, AttivitaNonProgettuale a
+where a.persona = pers.id
+  and a.tipo = 'Didattica'  
+  and pers.posizione = 'Ricercatore';
+
+
+\echo '7) Quali sono il nome e il cognome dei Ricercatori che hanno\n   piu'' di un impegno per didattica?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, AttivitaNonProgettuale a1, 
+     AttivitaNonProgettuale a2
+where a1.persona = pers.id
+  and a2.persona = pers.id
+  and a1.tipo = 'Didattica'  
+  and a2.tipo = a1.tipo
+  and a1.id <> a2.id
+  and pers.posizione = 'Ricercatore';
+
+
+\echo '8) Quali sono il nome e il cognome degli strutturati che nello\n   stesso giorno hanno sia attivita'' progettuali che\n   attività non progettuali?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, AttivitaProgetto ap, 
+     AttivitaNonProgettuale anp
+where ap.persona = pers.id
+  and anp.persona = pers.id
+  and ap.giorno = anp.giorno;
+
+
+\echo '9) Quali sono il nome e il cognome degli strutturati che\n   nello stesso giorno hanno sia attivita'' progettuali che\n   attivita'' non progettuali? Si richiede di restituire anche\n   il giorno, il nome del progetto, il tipo dell''attivita'' non\n   progettuale e la durata in ore di entrambe le attivita''.\n'
+
+select
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome,
+	ap.giorno as giorno,
+	prj.nome as prj,
+	ap.oreDurata as h_prj,
+	anp.tipo as att_noprj,
+	anp.oreDurata as h_noprj
+from Persona pers, AttivitaProgetto ap, 
+     AttivitaNonProgettuale anp, Progetto prj
+where ap.persona = pers.id
+  and anp.persona = pers.id
+  and ap.giorno = anp.giorno
+  and ap.progetto = prj.id;
+
+
+
+\echo '10) Quali sono il nome e il cognome degli strutturati che\n   nello stesso giorno sono assenti e hanno attivita'' progettuali?\n'
+
+select distinct
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, AttivitaProgetto ap, Assenza ass
+where ap.persona = pers.id 
+  and ass.persona = pers.id
+  and ap.giorno = ass.giorno;
+
+
+
+\echo '11) Quali sono il nome e il cognome degli strutturati che nello stesso\n    giorno sono assenti e hanno attivita'' progettuali?\n    Si richiede anche di proiettare il giorno, il nome del progetto, la causa di\n    assenza e la durata in ore della attivita''\n    progettuale.\n'
+
+select 
+	pers.id as id,
+	pers.nome as nome,
+	pers.cognome as cognome,
+	ap.giorno as giorno,
+	ass.tipo as causa_ass,
+	prj.nome as progetto,	
+	ap.oreDurata as ore_att_prj
+from Persona pers, AttivitaProgetto ap, Assenza ass,
+     Progetto prj
+where ap.persona = pers.id 
+  and ass.persona = pers.id
+  and ap.giorno = ass.giorno
+  and ap.progetto = prj.id;
+
+
+
+\echo '12) Quali sono i WP che hanno lo stesso nome, ma appartengono\n    a progetti diversi?\n'
+
+select distinct wp1.nome
+from WP wp1, WP wp2
+where wp1.nome = wp2.nome
+  and wp1.progetto <> wp2.progetto;
+
+

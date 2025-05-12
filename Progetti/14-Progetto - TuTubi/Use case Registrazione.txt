@@ -1,0 +1,8 @@
+nuovoUtente(nome:Stringa) : Utente
+	pre: 
+		non esiste u:Utente tale che u.nome = nome
+		
+	post: 
+		viene creato e restituito result:Utente tale che:
+			result.nome = nome
+			result.iscrizione = adesso

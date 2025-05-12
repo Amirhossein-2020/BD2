@@ -1,0 +1,13 @@
+Specifica classe Nave
+
+
+Vincoli esterni
+
+[V.Nave.non-due-crociere-simultaneamente]
+	Non esiste n:Nave tale che esistono:
+		- c1:Crociera t.c. (c1,n):croc_nave
+		- c2:Crociera t.c. (c2,n):croc_nave
+		- c1 != c2
+		- t:Data tale che: 
+			- c1.inizio <= t <= c1.fine()
+			- c2.inizio <= t <= c2.fine()

@@ -1,0 +1,28 @@
+Raffinamento dei prerequisiti:
+1. Volo
+|	1.1 codice (Regex)
+|	1.2 durata (Durata)
+|	1.3 compagnia aerea (compagnia aerea)
+|	1.4 aeroporti (aeroporto)
+|		1.4.1 partenza
+|		1.4.2 arrivo
+1 <= 1-1 Volo Charter
+|	1-1.1 sequenza di aeroporti intermedi (aeroporto - piu di uno)
+|	1-1.2 velivolo (velivolo)
+2. Aeroporto
+|	2.1 codice (Regex)
+|	2.2 nome (String)
+|	2.3 città (Città)
+|	2.4 nazione (Nazione)
+3. Compagnia Aerea:
+|	3.1 nome (String)
+|	3.2 anno di fondazione (Int>=0)
+|	3.3 città (Città - sede)
+4. Città
+|	4.1 nome (String)
+|	4.2 numero di abitanti (Int>=0)
+|	4.3 nazione (Nazione)
+5. Nazione
+|	5.1 nome(String)
+6. Velivolo
+|	6.1 modello (String)

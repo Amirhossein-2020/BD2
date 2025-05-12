@@ -1,0 +1,46 @@
+Raffinamento dei Prerequisiti:
+
+1. Crociera
+|	1.1 codice (String)
+|	1.2 data_di_inizio (Date)
+|	1.3 data_di_fine (Date)
+|	1.4 itinerario (Itinerario - uno)
+|	1 <- 1.5 Luna_di_Miele 
+|	|	1.5 <- 1.5.1 Tradizionale (destinazioni romantiche >= divertenti)
+|	|	1.5 <- 1.5.2 Alternativa (destinazioni romantiche < divertenti)
+|	1 <- 1.6 Famiglia
+|	|	1.6.1 adatto_ai_bambini (Boolean)
+2. Itinerario
+|	2.1 nome (String)
+|	2.2 sequenza_ordinata_destinazioni (Destinazione - piu di una)
+3. Destinazione
+|	3.1 nome (String)
+|	3.2 indice_di_ordine (Int > 0)
+|	3.3 timeStamp_arrivo (Record(date:data_di_inizio + x, ora:0..23))
+|	3.4 timeStamp_partenza (Record(date:data_di_inizio + x + y, ora:0..23))
+|	3.5 posti_visitabili (Posto_Visitabile - piu di uno)
+|	3.6 tipo ({romantico, divertente}) [1..2]
+4. Continente
+|	4.1 nome (String)
+5. Posto_Visitabile
+|	5.1 nome (String)
+|	5.2 descrizione (Text)
+|	5.3 fascia_oraria (0..23)
+6. Nave
+|	6.1 nome (String)
+|	6.2 grado_di_comfort (3...5)
+|	6.3 capienza (Int)
+7. CLiente
+|	7.1 nome (String)
+|	7.2 cognome (String)
+|	7.3 età (Int > 0)
+|	7.4 indirizzo (Record(via: String, civico: Int>0, CAP: String))
+8. Città
+|	8.1 nome (String)
+9. Nazione
+|	9.1 nome (String)
+10. Prenotazione
+|	10.1 istante (Record(data:Date, ora: 0..23, min: 0..59, sec: 0..59))
+|	10.2 crociera (Crociera)
+|	10.3 posti_prenotati (0 <= Int)
+

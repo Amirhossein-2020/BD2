@@ -1,0 +1,7 @@
+DateHour :  Record(Date : Date, Time : 0..23)
+FileVideo: 
+ - sequenza di byte che codifica un flusso video
+ - operazioni del tipo di dato
+ 		durataSec(f:FileVideo): Intero >= 0
+ 			pre: nessuna
+ 			post: result è la durata di 'f'

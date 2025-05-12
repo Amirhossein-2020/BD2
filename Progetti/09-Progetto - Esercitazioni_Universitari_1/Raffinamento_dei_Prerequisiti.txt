@@ -1,0 +1,18 @@
+Raffinamento dei Prerequisti:
+1. Insegnamento
+|	1.1 nome (String)
+|	1.2 crediti (Int>=0)
+|	1.3 docente (Docente - piu di uno)
+|	1.4 anno_academico_di_riferimento (Int > 0)
+2. Docente
+|	2.1 matricola (String)
+|	2.2 nome (String)
+|	2.3 cognome (String)
+3. Esercitzione
+|	3.1 data (Date)
+|	3.2 esercizi (Esercizio - piu di uno)
+4. Esercizio 
+|	4.1 testo (Text)
+|	4.2 soluzioni (0*)
+5. Soluzione
+|	5.1 testo (Text)			

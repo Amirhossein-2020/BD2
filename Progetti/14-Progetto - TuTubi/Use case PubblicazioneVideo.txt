@@ -1,0 +1,17 @@
+nuovoVideo(t:Stringa, d:Stringa, f:FileVideo, c:Categoria, T:Tag [1..*]) : Video
+	pre: nessuna
+	post:			
+		Viene creato e restituito result:Video tale che:
+			- result.titolo = t
+			- result.descrizione = d
+			- result.flusso = f
+			- result.istante = adesso
+
+		Viene creato il link (c, result): cat_video.
+
+		Per ogni t:T, viene creato il link (t,result): tag_video.
+
+		Sia u:Utente l'oggetto che rappresenta l'attore che ha 
+		invocato l'operazione.
+
+		Viene creato il link (u,result): utente_pubblica_video.

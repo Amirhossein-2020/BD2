@@ -1,0 +1,3 @@
+Specifica dei vincoli esterni:
+[V.Valutazzione.non_si_puo_commentare_senza_visualizzare]
+	All vid, u, vis not(vis_ut(u, vis) and vid_vis(vis, vid)) ---> not Exists c comment(c) and comm_ut(u, c) and vid_comm(c, vid)

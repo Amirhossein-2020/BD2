@@ -1,0 +1,124 @@
+\echo '1) Quanti sono gli strutturati di ogni fascia?\n'
+
+select posizione, count(*) as numero
+from Persona
+group by posizione;
+
+    
+\echo '2) Quanti sono gli strutturati con stipendio >= 40000?\n'
+
+select count(*) as numero
+from Persona
+where stipendio >= 40000;
+    
+\echo '3) Quanti sono i progetti gia'' finiti che superano il budget di 50000?\n'
+
+select count(*) as numero
+from Progetto
+where budget > 50000
+  and fine < current_timestamp;
+    
+
+\echo '4) Qual e'' la media, il massimo e il minimo delle ore\n   delle attivita'' relative al progetto "Pegasus"?\n'
+
+select 
+	avg(a.oreDurata) as media, 
+	min(a.oreDurata) as minimo,
+	max(a.oreDurata) as massimo
+from AttivitaProgetto a, Progetto prj
+where a.progetto = prj.id
+  and prj.nome = 'Pegasus';
+
+\echo '5) Quali sono le medie, i massimi e i minimi delle ore giornaliere\n   dedicate al progetto ''Pegasus'' da ogni singolo docente?\n'
+
+select 
+	pers.id as id_persona, 
+	pers.nome as nome, 
+	pers.cognome as cognome,
+	avg(a.oreDurata) as media, 
+	min(a.oreDurata) as minimo,
+	max(a.oreDurata) as massimo
+from AttivitaProgetto a, Progetto prj, Persona pers
+where a.progetto = prj.id
+  and prj.nome = 'Pegasus'
+  and pers.id = a.persona
+group by pers.id, pers.nome, pers.cognome;
+
+    
+\echo '6) Qual e'' il numero totale di ore dedicate alla didattica\n   da ogni docente?\n'
+
+select 
+	pers.id as id_persona, 
+	pers.nome as nome, 
+	pers.cognome as cognome,	
+	sum(oreDurata) as ore_didattica
+from AttivitaNonProgettuale a, Persona pers
+where tipo = 'Didattica'
+  and a.persona = pers.id
+group by pers.id, pers.nome, pers.cognome;
+
+
+    
+\echo '7) Qual e'' la media, il massimo e il minimo degli stipendi\n   dei ricercatori?\n'
+
+select
+	avg(stipendio) as media,
+	min(stipendio) as minimo,
+	max(stipendio) as massimo
+from Persona
+where posizione = 'Ricercatore';
+
+
+\echo '8) Quali sono le medie, i massimi e i minimi degli stipendi\n   dei ricercatori, dei professori\n   associati e dei professori ordinari?\n'
+    
+select
+	posizione as posizione,
+	avg(stipendio) as media,
+	min(stipendio) as minimo,
+	max(stipendio) as massimo
+from Persona pers
+group by posizione;
+
+
+
+\echo '9) Quante ore "Ginevra Riva" ha dedicato ad ogni progetto\n   nel quale ha lavorato?\n'
+
+select 
+	prj.id as id_progetto, 
+	prj.nome as progetto, 
+	sum(a.oreDurata) as totale_ore
+from Persona pers, AttivitaProgetto a, Progetto prj
+where pers.nome = 'Ginevra'
+  and pers.cognome = 'Riva'
+  and a.persona = pers.id
+  and a.progetto = prj.id
+group by prj.id, prj.nome;
+
+
+    
+\echo '10) Qual e'' il nome dei progetti su cui lavorano piu'' di\n    due strutturati?\n'
+
+select 
+	prj.id as id_progetto,
+	prj.nome as progetto
+from Progetto prj, Persona pers, AttivitaProgetto a
+where a.persona = pers.id
+  and a.progetto = prj.id
+group by prj.id, prj.nome
+having count(distinct pers.id) > 2;
+
+    
+\echo '11) Quali sono i professori associati che hanno lavorato\n    su piu'' di un progetto?\n'
+
+select distinct
+	pers.id as id_persona,
+	pers.nome as nome,
+	pers.cognome as cognome
+from Persona pers, 
+     AttivitaProgetto a1, AttivitaProgetto a2
+where pers.posizione = 'Professore Associato'
+  and a1.persona = pers.id
+  and a2.persona = pers.id
+  and a1.progetto <> a2.progetto;
+
+

@@ -1,0 +1,37 @@
+Specifica dei vincoli esterni:
+[V.Video.autore_non_risponde_a_se_stesso]
+	Per ogni r:Video, per cui esiste v:Video tale che
+		(r,v): risponde_a_video
+
+	sia:
+		- u:Utente tale che:
+			(u, r): pubblica
+	Deve che (u,v) non è un link di pubblica.
+Formalmente: 
+	All v, vr, u pubblica(u, v) and risponde_a_video(vr, v) ---> not pubblica(u, vr)
+or
+	ALL r,v,u   Video(r) and Video(v) and Utente(u) and 
+				pubblica(u,r) and 
+				risponde_a_video(r,v) -->
+								not pubblica(u,v)
+
+Specifica delle operazioni:
+	durataSec() : Intero >= 0
+		pre: nessuna
+		post: result = durataSec(this.flusso) 
+
+	n_visulizzazioni() : Intero >= 0
+		pre: nessuna
+		post: sia V={(this, vis):vid_vis}
+		result = |V|
+
+	media_voti() : Real >= 0 and Real <= 5
+		pre: Exists u valuta(u, this)
+		post: sia Val = {(u, this):valuta}
+		tot += v.voto per ogni v appartenente a Val
+		result = tot / |Val|
+
+	n_risposte() : Int >= 0 
+		pre: nessuna
+		post: sia V = {(vr, this):risponde_a_video}
+		result = |V|

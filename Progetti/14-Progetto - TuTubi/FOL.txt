@@ -1,0 +1,38 @@
+P = {	Utente/, Video/1, Categoria/1, Tag/1, Visualizzazione/1, 
+	Stringa/1, DataOra/1, FileVideo/1, "Intero>=0"/1, Intero/1, 
+	utente_pubblica_video/2, risposta_a_video/2, cat_video/2, tag_video/2, ut_vis/2, 
+	nome/2, iscrizione/2, istante/2,
+	">="/2, =/2
+}
+F = { +/2, -/2, ...}
+PHI = 
+// 1. Disgiunzione tra classi
+ALL x Utente(x) ---> not Video(x)
+ALL x Utente(x) ---> not Visualizzazione(x)
+......
+ALL x Utente(x) ---> not Stringa(x)
+......
+
+
+
+
+
+ 
+ALL x Intero(x) ---> not Stringa(x)
+ALL x "Intero>=0"(x) <---> Intero(x) and x >= 0
+
+
+//Tipizzazione delle associazioni
+
+ALL u, v utente_pubblica_video(u,v) ---> Utente(u) and Video(v)
+ALL r, o risposta_a_video(o, r) ---> Video(o) and Video(r)
+.....
+
+// Tipizzazione degli attributi
+ALL x Utente(x) ---> (ALL y nome(x,y) ---> Stringa(y))
+
+// Cardinalita sui ruoli di associazzioni
+ALL v Video(v) ---> EXISTS u utente_pubblica_video(u, v) // 1...
+ALL v Video(v) ---> 
+
+// Cardinalita sui valori degli attributi

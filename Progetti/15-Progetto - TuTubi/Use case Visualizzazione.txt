@@ -1,0 +1,8 @@
+Specidfica Use case Visualizzazione
+
+	visualizza_video(v:Video)
+		pre: nessuna
+		post:
+			Se l'attore che invoca l'operazione e' un utente registrato, sia u: Utente l'istanza che lo rappresenta.
+
+			Viene create e restituita una nuova istanza result:Visualizzazione tale che result.istanza: adesso.

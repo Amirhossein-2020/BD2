@@ -1,0 +1,14 @@
+Specifica use-case Prenotazione
+
+	prenota(cl:Cliente, cr:Crociera, n:Intero > 0) : Prenotazione
+		pre:
+			cr.n_posti_liberi() >= n
+
+		post:
+			Viene creata l'istanza result:Prenotazione tale che:
+				- result.istante = adesso
+				- result.pax = n
+
+			Vengono creati i link:
+				- (cl, result): cliente_pren 
+				- (cr, result): crociera_pren

@@ -1,0 +1,18 @@
+Raffinamento dei Requisiti:
+
+1. Impiegato
+|	1.1 Nome (stringa)
+|	1.2 Cognome (stringa)
+|	1.3 Data di Nascita (data)
+|	1.4 Stipendio Attuale (numero reale >= 0)
+|	1.5 Dipartimento di Afferenza (dipartimento - esattamente uno)
+2. Dipartimento
+|	2.1 Nome (stringa)
+|	2.2 Numero di Telefono del Centralino (stringa)
+|	2.3 Data di Afferenza di ogni Impiegato (data - più di uno)
+|	2.4 Direttore del Dipartimento (impiegato - esattamente uno)
+3. Progetti Aziendali
+|	3.1 Nome (stringa)
+|	3.2 Budget (numero reale >= 0)
+|	3.3 Impiegati Partecipanti (impiegato - più di uno)
+4. Direttori del Dipartimento (impiegato, dipartimento in direzione)

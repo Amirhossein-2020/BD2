@@ -1,0 +1,16 @@
+Specifica di use case Valutazione
+
+    valuta(vid:video, voto:Voto)
+        pre:
+            Sia u.utente loggetto che rappresenta lattore che ha invocato loperazione
+            not valutazione(u, cid) and not utente_pubbilca_video(u, vid)
+            EXISTS vis, i_vis
+                Visualizzazione(vis) and ut_vis(u, vis) and vid_vis() .........
+        post:
+            -Dom. di Interp.: invariato
+            -Variazione nelle ennuple dei predicati:
+
+                - istante(u, vid, ist_old) 
+                - valutazione(u, vid)
+                - voto(u, vid, voto)
+                -

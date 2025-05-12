@@ -1,0 +1,63 @@
+F = { usa_nave/1 }
+P = { Crociera/1, Nave/1, Capitano/1, ha_capitano/2, Itinerario/1, segue/2, LunaDiMiele/1, PerFamigia/1 }
+
+1) Ogni crociera viene effettuata uttilizzando una nave
+|	ALL c Crociera(c) --> Nave(usa_nave(c)) // funziona solo per assocazioni 1..1
+seconda versione
+|	ALL c Crociera(c) --> EXISTS n usa(c, n) and Nave(n) : questa sta dicendo usa almeno una nave
+|	ALL c EXISTS n Crociera(c) --> n usa(c, n) and Nave(n) : non molto leggibile
+|	1) Ogni crociera e' esattamente connessa a una nave
+|	F = { }
+|	P = { Crociera/1, Nave/1, Capitano/1, ha_capitano/2, usa/2, segue/2, Itinerario/1, nome/2, Stringa/1 }
+|	usa/2
+|	-----
+|	alpha, beta
+|	alpha, alpha
+|	alpha, gamma
+|	alpha, delta
+2) Ogni crociera ha associati due capitani
+|	All cr Crociera(cr) -->
+|	|	Exists cap1, cap2
+|	|	|	Capitano(cap1) and Capitano(cap2) and cap1 != cap2
+|	|	|	ha_captiano(cr, cap1) and ha_captiano(cr, cap2)
+3) Ogni crociera segue un itinerario
+|	3.1) ALL x, y segue(c, y) --> Crociera(x) and itinerario(y)
+and
+|	3.2) ALL cr Crociera(cr) --> EXISTS i Itinerario(i) and segue(cr, i) // superfluo
+|	3.3) ALL cr Crociera(cr) --> EXISTS i segue(cr, i) // vincolo di molteplicita 1*
+and
+|	3.4) ALL cr Crociera(cr) --> not EXISTS i1, i2 segue(cr, i1)	// ..1
+|	|						and segue(cr, i2) and i1 != i2
+and
+|	3.5) not EXISTS x Crociera(x) and Itinerario(x) : Interpretazione e' un modello per cui mi serve (3.5)
+4) Gli itinerari hanno un nome (una stringa) univoco: non usiamo simblo della funzione usa/1 perche' non garantisce l'univocita' dell'attributos
+|	4.1 ALL x, y nome(x, y) --> Itinerario(x) and Stringa(y) //Errato per gli attributi	
+|	4.2 ALL i Itinerario(i) --> EXISTS n nome(i, n) // 1..
+and
+|	4.3 ALL i Itinerario(i) --> not EXISTS n1, n2 nome(i, n1)	//..1
+|	|						and nome(i, n2) and n1 != n2
+and
+|	4.4 not EXISTS n, i1, i2
+|	|	i1 != i2 and nome(i1, n) and (i2, n)	//unicita' dei nomi di itinerari
+5) Ogni crociera tocca un certo insieme non vuoto di destinazioni
+|	
+6) Le crociere si dividono in crociere di luna di miele e crociere per famiglia
+|	6.1) ALL x Crociera(x) --> LunaDiMiele(x) or PerFamigia(x)
+and
+|	6.2) ALL x Crociera(x) --> not(LunaDiMile(x) and PerFamiglia(x))
+and
+|	6.3) ALL x LunaDiMiele(x) --> Crociera(x)
+and
+|	6.4) ALL x PerFamiglia(x) --> Crociera(x)
+
+
+D = {alpha, beta, gamma, delta}
+
+Crociera
+--------
+alpha
+
+Nave
+--------
+beta
+

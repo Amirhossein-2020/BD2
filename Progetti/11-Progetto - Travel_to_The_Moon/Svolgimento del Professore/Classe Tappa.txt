@@ -1,0 +1,36 @@
+Specifica classe Tappa
+
+
+Operazioni
+
+n_ordine() : Intero > 0
+	pre: nessuna
+	post: 
+		No side-effect.
+
+		Sia i l'itinerario della tappa this;
+
+		Sia TappePrecedenti l'insieme degli oggetti t:Tappa tali che:
+				- (i,t): itin_tappa
+				- t.arrivo < this.arrivo;
+
+		result = |TappePrecedenti| + 1. 
+
+
+
+
+Vincoli esterni
+
+
+[V.Tappa.date]
+	Per ogni istanza t:Tappa, deve essere:
+		t.arrivo < t.ripartenza
+
+[V.Tappa.non-sovrapposte]		
+	Per ogni i:Itinerario, e per ogni coppia t1, t2 di tappe distinte di 'i', ovvero tali che:
+		- (i,t1):itin_tappa
+		- (i,t2):itin_tappa
+		- t1 != t2
+	deve essere:
+		t1.ripartenza < t2.arrivo, oppure
+		t2.ripartenza < t1.arrivo.

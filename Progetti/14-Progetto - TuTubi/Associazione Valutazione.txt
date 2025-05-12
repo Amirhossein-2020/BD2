@@ -1,0 +1,9 @@
+[V.valutazzione.non_si_puo_valutare_senza_visualizzare]
+	All vid, u, vis not(vis_ut(u, vis) and vid_vis(vis, vid)) ---> not (valuta(u, vid))
+	
+	Se (u:Utente,v:Video): valutazione allora deve esistere
+		vis:Visualizzazione tale che:
+			(u, vis): ut_vis, (v, vis): vid_vis
+	ALL u,v, i_val valutazione(u,v) and istante(u, v, i_val) ---> EXISTS vis, i_val ut_vis(u, vis) and vid_vis(v, vis) and istante(vis, i_val) and i_vis <= i_val.
+[V.Valutazzione.autore_non_valuta_suo_video]
+	All vid, u pubblica(u, vid) ---> not (valuta(u, vid))

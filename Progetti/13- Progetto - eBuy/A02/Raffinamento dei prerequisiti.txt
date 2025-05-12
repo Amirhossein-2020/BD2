@@ -1,0 +1,13 @@
+Raffinamento dei prerequisiti:
+1. Utente
+|	1.1. Utente Registrato
+|	|	1.1.1. nome (String)
+|	|	1.1.2. data_di_registrazione (Date)
+|`	1.2. Bidder
+2. Oggetto
+|	2.1 descrizione (String)
+|	2.2 categoria (Category)
+|	2.3 prezzo di vendita ?
+|	2.4 metodi_di_pagamento (Enum{"bonifico", "carta di credito"})
+|	2.5 condizione (Enum{"nuovo", "usato"})
+

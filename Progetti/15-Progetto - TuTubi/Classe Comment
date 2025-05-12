@@ -1,0 +1,8 @@
+Specifica dei vincoli esterni:
+[V.Comment.non_si_puo_commentare_senza_visualizzare]
+	All vid, u, vis not(vis_ut(u, vis) and vid_vis(vis, vid)) ---> not Exists c comment(c) and comm_ut(u, c) and vid_comm(c, vid)
+[V.Comment.visualizzazione_progressa]
+    ALL c, ic, u, v
+        Comment(c) and istante(c, ic) and
+        comm_vid(c, v) and vid_comm(v, c)
+            ........

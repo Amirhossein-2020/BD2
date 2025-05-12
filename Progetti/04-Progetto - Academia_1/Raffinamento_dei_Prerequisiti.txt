@@ -1,0 +1,25 @@
+Raffinamento dei Prerequisiti:
+1. Docente:
+|	1.1 nome (String)
+|	1.2 cognome (String)
+|	1.3 data di nascità (Date)
+|	1.4 matricola (String)
+|	1.5 posizione universitaria (Enum {ricercatore, professore associato, professore ordinario})
+|	1.6 progetti partecipati (Progetto - piu di uno)
+2. Progetti di Ricerca:
+|	2.1 nome (String)
+|	2.2 acronimo (String)
+|	2.3 data di inizio (Date)
+|	2.4 data di fine (Date)
+|	2.5 docenti partecipanti (Docente - piu di uno)
+|
+|	2 <- 2-1. Work Package
+|	|	2-1.1 nome (String)
+|	|	2-1.2 data di inizio (Date)
+|	|	2-1.3 data di fine (Date)
+3. Impegno:
+|	3.1 giorno di avvenimento (Enum {Lunedì, Martedì, Mercoledì, Giovedì, Venerdì, Sabato, Domenica})
+|	3.2 durata (durata (ore: Int>=0, minuti: [0...59]))
+|	3.3 tipologia ?
+|	3.4 motivazione (Text)
+	

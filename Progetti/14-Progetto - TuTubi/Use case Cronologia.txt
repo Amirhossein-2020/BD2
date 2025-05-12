@@ -1,0 +1,9 @@
+Specifica use case Cronologia
+
+cronologia(): Visualizzazione [0..*]
+	pre: nessuna
+	post:
+		Sia u:Utente l'oggetto che rappresenta l'attore che ha invocato l'operazione.
+		
+		result è l'insieme ordinato dei v:Visualizzazione tali che:
+			(u,v):ut_vis

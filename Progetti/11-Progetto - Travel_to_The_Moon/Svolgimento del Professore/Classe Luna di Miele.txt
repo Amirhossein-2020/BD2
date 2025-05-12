@@ -1,0 +1,17 @@
+Specifica classe LunaDiMiele
+
+
+operazione tipo() : TipoLdM
+	pre: nessuna
+	post: 
+		- Sia i:Itinerario l'itinerario di this, ovvero tale che:
+			(this, i):croc_itin
+
+		- Sia Drom l'insieme degli oggetti d:i.destinazioni() tali che d.tipo contiene il valore 'romantica'
+
+		- Sia Ddiv l'insieme degli oggetti d:i.destinazioni() tali che d.tipo contiene il valore 'divertente'
+
+		result è: 
+			- tradizionale se |Drom| >= |Ddiv|
+			- alternativa altrimenti
+
