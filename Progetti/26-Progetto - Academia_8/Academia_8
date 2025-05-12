@@ -1,0 +1,164 @@
+\echo '1) Quali sono le persone (id, nome e cognome) che hanno avuto assenze solo nei giorni in cui non avevano alcuna attività (progettuali o non progettuali)? Ordinare il risultato per id crescenti.\n'
+SELECT p.id as id, p.nome as nome, p.cognome as cognome
+FROM Persona p
+
+EXCEPT
+
+SELECT distinct p.id, p.nome, p.cognome
+FROM Persona p, Assenza a
+WHERE
+    a.persona = p.id
+    and (
+        a.giorno =ANY (
+            SELECT giorno
+            FROM AttivitaProgetto ap
+            WHERE ap.persona = a.persona
+        )
+        or a.giorno =ANY (
+            SELECT giorno
+            FROM AttivitaNonProgettuale anp
+            WHERE anp.persona = a.persona
+        )
+    )
+ORDER BY id;  
+
+ 
+
+-- La versione annidata della query è estremamente inefficiente, in quanto ci sono due sottoquery correlate, che vanno ricalcolate per ogni persona.
+-- Una versione ben più efficiente utilizza gli outer join, che sfruttano gli indici:
+\echo '1) Versione 2'
+select p.id as id, p.nome as nome, p.cognome as cognome
+from (
+        (Persona p LEFT OUTER JOIN Assenza a ON a.persona = p.id)
+            LEFT OUTER JOIN AttivitaProgetto ap 
+            ON ap.persona = a.persona AND ap.giorno = a.giorno
+     ) LEFT OUTER JOIN AttivitaNonProgettuale anp 
+       ON anp.persona = a.persona AND anp.giorno = a.giorno
+group by p.id, p.nome, p.cognome  
+having count(a.id) = 0 or 
+       count(a.id) = sum( (ap.id is null and anp.id is null)::int )
+order by id;
+
+-- Creando indici su Assenza(persona, giorno), AttivitaProgetto(persona, giorno), AttivitaNonProgettuale(persona, giorno), le performance possono essere incrementate ancora di più.
+
+
+\echo '2) Quali sono le persone (id, nome e cognome, ordinate per id crescente) che non hanno mai partecipato ad alcun progetto durante la durata del progetto "Pegasus"?'
+
+
+SELECT p.id as id, p.nome as nome, p.cognome as cognome
+FROM Persona p 
+
+EXCEPT 
+
+SELECT distinct p.id, p.nome, p.cognome
+FROM Persona p, Progetto pr_pegasus, AttivitaProgetto ap
+WHERE pr_pegasus.nome = 'Pegasus'
+  AND ap.persona = p.id
+  AND ap.giorno BETWEEN pr_pegasus.inizio AND pr_pegasus.fine
+ORDER BY id;  
+
+-- oppure, in forma annidata (fortunatamente, non correlata, quindi le sottoquery viene calcolata una sola volta e l'efficienza è del tutto simile a quella della query con EXCEPT):
+
+\echo '2) Versione 2'
+SELECT id, nome, cognome
+FROM Persona
+WHERE id NOT IN (
+    SELECT distinct p2.id
+    FROM Persona p2, Progetto pr_pegasus, AttivitaProgetto ap
+    WHERE pr_pegasus.nome = 'Pegasus'
+      AND ap.persona = p2.id
+      AND ap.giorno BETWEEN pr_pegasus.inizio AND pr_pegasus.fine
+)
+ORDER BY id;
+
+-- Una versione più efficiente è ottenibile usando gli outer join, analogamente a quanto fatto per la query 1.
+
+
+\echo '3) Quali sono id, nome, cognome e stipendio dei ricercatori (in ordine di id crescente) con stipendio maggiore di tutti i professori (associati e ordinari)?'
+
+SELECT id, nome, cognome, stipendio
+FROM Persona
+where posizione = 'Ricercatore'
+AND stipendio > all (
+    SELECT p2.stipendio
+    FROM Persona p2
+    WHERE p2.posizione IN ('Professore Associato', 'Professore Ordinario')
+)
+ORDER BY id;
+
+-- oppure, query più efficiente, visto che la sottoquery restituisce una sola ennupla:
+
+\echo '3) Versione 2'
+SELECT id, nome, cognome, stipendio, posizione
+FROM Persona
+WHERE posizione='Ricercatore'
+AND stipendio > (
+    SELECT MAX(p2.stipendio)
+    FROM Persona p2
+		WHERE p2.posizione IN ('Professore Associato', 'Professore Ordinario')
+);
+
+
+
+\echo '4) Quali sono le persone (ordinate per id crescente) che hanno lavorato su progetti con un budget superiore alla media dei budget di tutti i progetti?'
+
+SELECT DISTINCT p.id, p.nome, p.cognome
+FROM Persona p, AttivitaProgetto ap,Progetto pr
+WHERE
+	p.id = ap.persona
+	AND ap.progetto = pr.id
+    AND pr.budget > (SELECT AVG(budget) FROM Progetto)
+ORDER BY p.id;    
+
+
+
+\echo '5) Quali sono i progetti (ordinati con id crescente) con un budget inferiore allala media, ma con un numero complessivo di ore dedicate alle attivita'' di ricerca sopra la media?'
+
+SELECT id, nome
+FROM Progetto
+WHERE budget < (
+    SELECT AVG(budget)
+    FROM Progetto
+) AND id IN (
+    SELECT progetto
+    FROM AttivitaProgetto
+    WHERE tipo = 'Ricerca e Sviluppo'
+    GROUP BY progetto
+    HAVING SUM(oreDurata) > (
+        SELECT AVG(somma_ore)
+        FROM (
+            SELECT progetto, SUM(oreDurata) AS somma_ore
+            FROM AttivitaProgetto
+            WHERE tipo = 'Ricerca e Sviluppo'
+            GROUP BY progetto
+        ) AS MedieOre
+    )
+)
+ORDER BY id;
+
+-- La query soffre di una grave insufficiente, visto che la clausola HAVING non è ottimizzata, ma semplicemente eseguita in fase di output su ogni gruppo. 
+-- Osservando che, fortunatamente, le query interne non sono correlate a quelle esterne, la query seguente usa WITH per calcolare le statistiche e poi esclusivamente join e prodotti (le tabelle BugetMedio e MedieOreRicera definite di seguito hanno una sola ennupla, quindi il prodotto è a costo zero).
+
+\echo '5) Versione 2'
+
+WITH BudgetMedio AS (
+    SELECT AVG(budget) as valore
+    FROM Progetto
+),
+TotOreRicerca AS (
+    SELECT pr.id as progetto, sum(COALESCE(ap.oreDurata, 0)) as valore
+    FROM Progetto pr LEFT OUTER JOIN AttivitaProgetto ap
+      ON ap.progetto = pr.id AND ap.tipo = 'Ricerca e Sviluppo'
+    GROUP BY pr.id
+),
+MedieOreRicerca AS (
+    SELECT AVG(valore) AS valore
+    FROM TotOreRicerca
+)
+SELECT pr.id, pr.nome
+FROM Progetto pr, BudgetMedio budget_medio, 
+     TotOreRicerca tot_ore_ric, MedieOreRicerca medie_ore_ric
+WHERE pr.budget < budget_medio.valore
+  AND tot_ore_ric.progetto = pr.id
+  AND tot_ore_ric.valore > medie_ore_ric.valore
+ORDER BY pr.id;

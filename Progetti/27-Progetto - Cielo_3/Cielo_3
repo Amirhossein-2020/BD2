@@ -1,0 +1,95 @@
+\echo '1) Qual è la durata media, per ogni compagnia, dei voli che partono da un aeroporto situato in Italia?\n'
+
+WITH PartenzeItaliane AS (
+    SELECT ap.comp, v.durataMinuti
+    FROM ArrPart ap, Volo v, LuogoAeroporto l
+    WHERE l.nazione = 'Italy' AND ap.codice = v.codice AND ap.comp = v.comp
+			AND ap.partenza = l.aeroporto
+)
+SELECT id.comp as compagnia, AVG(id.durataMinuti) AS durata_media
+FROM PartenzeItaliane id
+GROUP BY id.comp;
+
+\echo '2) Quali sono le compagnie che operano voli con durata media maggiore della durata media di tutti i voli?\n'
+
+WITH MediaDurataVolo AS (
+    SELECT AVG(durataMinuti) AS media_durata
+    FROM Volo
+),
+MediaDurataCompagnia AS (
+    SELECT comp, AVG(durataMinuti) AS media_durata_comp
+    FROM Volo
+    GROUP BY comp
+)
+SELECT mdc.comp, media_durata_comp as durata_media
+FROM MediaDurataCompagnia mdc, MediaDurataVolo mdv
+WHERE mdc.media_durata_comp > mdv.media_durata;
+
+\echo '3) Quali sono le città dove il numero totale di voli in arrivo è maggiore del numero medio dei voli in arrivo per tutte le città?\n'
+
+WITH ConteggioArriviPerCitta AS (
+    SELECT l.citta, COUNT(*) AS numero_arrivi
+    FROM ArrPart ap, LuogoAeroporto l
+    WHERE ap.arrivo = l.aeroporto
+    GROUP BY l.citta
+),
+MediaArriviCitta AS (
+    SELECT AVG(numero_arrivi) AS media_arrivi
+    FROM ConteggioArriviPerCitta
+)
+SELECT cac.citta, cac.numero_arrivi
+FROM ConteggioArriviPerCitta cac, MediaArriviCitta mac
+WHERE cac.numero_arrivi > mac.media_arrivi;
+
+\echo '4) Quali sono le compagnie aeree che hanno voli in partenza da aeroporti in Italia con una durata media inferiore alla durata media di tutti i voli in partenza da aeroporti in Italia?\n'
+
+WITH DurataPartenzeItaliane AS (
+    SELECT ap.comp, v.durataMinuti
+    FROM ArrPart ap, Volo v, LuogoAeroporto l
+    WHERE ap.codice = v.codice AND ap.comp = v.comp
+		  AND ap.partenza = l.aeroporto
+		  AND l.nazione = 'Italy'
+),
+MediaDurataPartenzeItaliane AS (
+    SELECT AVG(durataMinuti) AS durata_media
+    FROM DurataPartenzeItaliane
+),
+CompagniaDurataPartenzeItaliane AS (
+    SELECT comp, AVG(durataMinuti) AS durata_media
+    FROM DurataPartenzeItaliane
+    GROUP BY comp
+)
+SELECT cdpi.comp as compagnia, mdpi.durata_media as durata_media
+FROM CompagniaDurataPartenzeItaliane cdpi, MediaDurataPartenzeItaliane mdpi
+WHERE cdpi.durata_media < mdpi.durata_media;
+
+\echo '5) Quali sono le città i cui voli in arrivo hanno una durata media che differisce di più di una deviazione standard dalla durata media di tutti i voli? Restituire città e durate medie dei voli in arrivo.\n'
+
+WITH Stats AS (
+		SELECT avg(durataMinuti) as media, stddev(durataMinuti) as dev_std
+		FROM Volo
+)
+SELECT l.citta, AVG(v.durataMinuti) AS durata_media
+FROM ArrPart ap, Volo v, LuogoAeroporto l, Stats stats
+WHERE ap.codice = v.codice AND ap.comp = v.comp
+  AND ap.arrivo = l.aeroporto
+GROUP BY l.citta, stats.media, stats.dev_std
+HAVING NOT (AVG(v.durataMinuti) BETWEEN stats.media - stats.dev_std AND stats.media + stats.dev_std);
+
+\echo '6) Quali sono le nazioni che hanno il maggior numero di città dalle quali partono voli diretti in altre nazioni?\n'
+
+WITH Stats AS (
+	SELECT lp.nazione, COUNT(DISTINCT lp.citta) AS num_citta
+	FROM ArrPart ap, LuogoAeroporto lp, LuogoAeroporto la
+	WHERE ap.partenza = lp.aeroporto
+	  AND ap.arrivo = la.aeroporto
+	  AND lp.nazione <> la.nazione
+	GROUP BY lp.nazione
+),
+Max AS (
+	SELECT MAX(num_citta) as num_citta
+	FROM Stats
+)
+SELECT stats.*
+FROM Stats stats, Max m
+WHERE stats.num_citta = m.num_citta;

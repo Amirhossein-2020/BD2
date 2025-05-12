@@ -1,0 +1,246 @@
+\echo '1) Quali sono i voli di durata maggiore della durata media di tutti i voli della stessa compagnia? Restituire il codice del volo, la compagnia e la durata.'
+
+\echo 'Versione 1'
+-- Versione annidata. Si noti come la query interna e' correlata a quella esterna, e quindi andra'' ricalcolata per ogni ennupla v1, anche quando v1 e' di una compagnia gia'' vista nelle iterazioni precedenti.
+SELECT *
+FROM Volo v1
+WHERE durataMinuti > (SELECT AVG(durataMinuti) FROM Volo v2 WHERE v1.comp = v2.comp);
+
+
+\echo 'Versione 2'
+-- Versione piu' efficiente, che calcola la durata media dei voli di una compagnia una sola volta
+
+WITH Stats AS (
+    SELECT comp, AVG(durataMinuti) AS durataMedia
+    FROM Volo
+    GROUP BY comp
+)
+SELECT v.codice, v.comp, v.durataMinuti, stats.durataMedia
+FROM Volo v, Stats stats
+WHERE v.comp = stats.comp
+  AND v.durataMinuti > stats.durataMedia;
+
+
+\echo '2) Quali sono le citta'' che hanno piu'' di un aeroporto e dove almeno uno di questi ha un volo operato da ''Apitalia''?'
+
+\echo 'Versione 1'
+-- Query annidata. Si noti come l'annidamento nella clausola WHERE impedisce di utilizzare UNION nella query interna e ci costringe ad effettuare due annidamenti.
+SELECT citta
+FROM LuogoAeroporto
+WHERE aeroporto IN (
+    SELECT partenza 
+    FROM ArrPart 
+    WHERE comp = 'Apitalia'
+) OR aeroporto IN (
+    SELECT arrivo 
+    FROM ArrPart 
+    WHERE comp = 'Apitalia'
+)
+GROUP BY citta
+HAVING COUNT(DISTINCT aeroporto) > 1;
+
+\echo 'Versione 2'
+-- Versione con il WITH, che supporta UNION.
+
+WITH Aeroporti AS (
+    SELECT partenza  as aeroporto
+    FROM ArrPart 
+    WHERE comp = 'Apitalia'
+
+    UNION DISTINCT
+
+    SELECT arrivo as aeroporto
+    FROM ArrPart 
+    WHERE comp = 'Apitalia'
+)
+SELECT citta
+FROM LuogoAeroporto
+WHERE aeroporto IN (
+    SELECT aeroporto 
+    FROM Aeroporti
+)
+GROUP BY citta
+HAVING COUNT(DISTINCT aeroporto) > 1;
+
+
+\echo 'Versione 3'
+-- Eliminiamo del tutto l'annidamento nella clausola WHERE per ottenere una query largamente piu' efficiente.
+
+SELECT 
+    la.citta
+FROM 
+    Aeroporto a, ArrPart ap, Volo v,LuogoAeroporto la
+WHERE 
+    v.comp = 'Apitalia'
+	and a.codice IN (ap.partenza, ap.arrivo)
+	and v.codice=ap.codice
+	and la.aeroporto=a.codice
+GROUP BY 
+    la.citta
+HAVING 
+    COUNT(DISTINCT a.codice) > 1;
+	
+
+
+\echo '3) Quali sono le coppie di aeroporti (A, B) tali che esistono voli tra A e B ed il numero di voli da A a B e'' uguale al numero di voli da B ad A?'
+
+\echo 'Versione 1'
+SELECT DISTINCT a1.partenza, a1.arrivo
+FROM ArrPart a1
+WHERE (SELECT COUNT(*) 
+       FROM ArrPart a2 
+       WHERE a2.partenza = a1.partenza 
+       AND a2.arrivo = a1.arrivo) = 
+      (SELECT COUNT(*) 
+       FROM ArrPart a3 
+       WHERE a3.partenza = a1.arrivo 
+       AND a3.arrivo = a1.partenza);
+-- Query annidata. Si noti come le query interne sono correlate a quella esterna, e quindi andranno ricalcolate per ogni ennupla a1.
+
+\echo 'Versione 2'
+-- Eliminiamo del tutto l'annidamento ottenendo una query piu' efficiente.
+WITH Stats AS (
+    SELECT a1.partenza as partenza, a1.arrivo as arrivo, COUNT(*) as numero_voli
+    FROM ArrPart a1
+    GROUP BY a1.partenza, a1.arrivo
+)
+SELECT DISTINCT s1.partenza, s1.arrivo
+FROM Stats s1, Stats s2
+WHERE 
+    (s1.partenza, s1.arrivo) = (s2.arrivo, s2.partenza)
+  AND s1.numero_voli = s2.numero_voli;
+
+
+\echo '4) Quali sono le compagnie che hanno voli con durata media maggiore della durata media di tutte le compagnie?'
+
+\echo 'Versione 1'
+SELECT nome
+FROM Compagnia c
+WHERE (SELECT AVG(durataMinuti)
+       FROM Volo v
+       WHERE v.comp = c.nome) > 
+	      (SELECT AVG(durataMinuti)
+		   FROM Volo);
+-- Query annidate e correlate, con i problemi di efficienza gia' descritti.
+
+\echo 'Versione 2'
+-- Versione senza annidamento, piu' efficiente
+WITH DurataMediaVoli AS (
+    SELECT AVG(durataMinuti) as valore
+    FROM Volo
+),
+DurataMediaVoliCompagnia AS (
+    SELECT c.nome as compagnia, AVG(durataMinuti) as durata_media_voli
+    FROM Compagnia c, Volo v
+    WHERE v.comp = c.nome
+    GROUP BY c.nome
+)
+SELECT dmvc.compagnia
+FROM DurataMediaVoliCompagnia dmvc, DurataMediaVoli dmv
+WHERE dmvc.durata_media_voli > dmv.valore;
+
+
+\echo '5) Quali sono gli aeroporti da cui partono voli per almeno 2 nazioni diverse?'
+
+\echo 'Versione 1'
+SELECT codice
+FROM Aeroporto a
+WHERE 2 <= (
+    SELECT COUNT(DISTINCT la.nazione)
+    FROM ArrPart ap, LuogoAeroporto la
+    WHERE ap.partenza = a.codice and ap.arrivo = la.aeroporto
+);
+
+\echo 'Versione 2'
+-- Evitiamo del tutto l'annidamento
+SELECT ap.partenza
+FROM ArrPart ap, LuogoAeroporto la_arr
+WHERE ap.arrivo = la_arr.aeroporto
+GROUP BY ap.partenza
+HAVING COUNT(DISTINCT la_arr.nazione) >= 2;
+
+
+\echo '6) Quali sono i voli che partono dalle citta'' con un unico aeroporto? Restituire codice dei voli, compagnie, e gli aeroporti di partenza e di arrivo.'
+
+\echo 'Versione 1'
+SELECT *
+FROM ArrPart
+WHERE partenza IN (
+    SELECT aeroporto
+    FROM LuogoAeroporto
+    WHERE citta IN (
+        SELECT citta
+        FROM LuogoAeroporto
+        GROUP BY citta
+        HAVING COUNT(aeroporto) = 1
+    )
+);
+
+\echo 'Versione 2'
+-- Eliminiamo gli annidamenti e l'uso di IN, solitamente poco efficiente
+
+WITH CittaConUnicoAeroporto AS (
+    SELECT citta
+    FROM LuogoAeroporto
+    GROUP BY citta
+    HAVING COUNT(aeroporto) = 1
+)
+SELECT ap.*
+FROM ArrPart ap, LuogoAeroporto la, CittaConUnicoAeroporto ccua
+WHERE ap.partenza = la.aeroporto
+  AND la.citta = ccua.citta;
+
+
+\echo '7) Quali sono gli aeroporti raggiungibili dall''aeroporto ''JFK'' tramite voli diretti e indiretti?'
+WITH RECURSIVE Raggiungibili AS (
+    SELECT arrivo
+    FROM ArrPart
+    WHERE partenza = 'JFK' 
+    UNION DISTINCT
+    SELECT ap.arrivo
+    FROM ArrPart ap, Raggiungibili r
+    WHERE r.arrivo = ap.partenza
+)
+SELECT DISTINCT arrivo
+FROM Raggiungibili;
+
+
+\echo '8) Quali sono le citta'' raggiungibili con voli diretti e indiretti partendo da Roma?'
+
+WITH RECURSIVE CittaRaggiungibili AS (
+    SELECT la2.aeroporto as aeroporto, la2.citta AS citta
+    FROM ArrPart ap, LuogoAeroporto la1, LuogoAeroporto la2
+	WHERE ap.partenza = la1.aeroporto 
+		and ap.arrivo = la2.aeroporto
+		and la1.citta = 'Roma'  
+    UNION DISTINCT
+    SELECT la.aeroporto as aeroporto, la.citta as citta
+    FROM ArrPart ap, CittaRaggiungibili cr, LuogoAeroporto la
+	WHERE ap.partenza = cr.aeroporto
+      AND ap.arrivo = la.aeroporto
+)
+SELECT DISTINCT citta
+FROM CittaRaggiungibili;
+
+
+\echo '9) Quali sono le citta'' raggiungibili con esattamente uno scalo intermedo partendo dall''aeroporto ''JFK''?'
+
+WITH RECURSIVE Scali AS (
+    -- Iniziamo con i voli diretti da JFK
+    SELECT la.aeroporto AS aeroporto, la.citta AS citta, 0 AS scali
+    FROM ArrPart ap, LuogoAeroporto la
+    WHERE ap.partenza = 'JFK' and ap.arrivo = la.aeroporto
+    
+    UNION ALL
+    
+    SELECT ap.arrivo AS aeroporto, la.citta AS citta, sc.scali + 1 AS scali
+    FROM Scali sc, ArrPart ap, LuogoAeroporto la
+    WHERE sc.scali = 0 -- Non calcolare piani di volo con 2 o piu' tratte
+      AND sc.aeroporto = ap.partenza
+      AND ap.arrivo = la.aeroporto
+)
+SELECT DISTINCT citta
+FROM Scali
+WHERE scali = 1;
+
+

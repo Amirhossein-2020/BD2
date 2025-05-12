@@ -1,0 +1,124 @@
+\echo '1) Quante sono le compagnie che operano (sia in arrivo che in partenza) nei diversi aeroporti?\n' 
+
+select a.codice, a.nome, count (distinct c.nome) as num_compagnie
+from Compagnia c, Aeroporto a , ArrPart ap, Volo v
+where v.comp = c.nome 
+  and ap.codice = v.codice
+  and ap.comp = c.nome 
+  and (ap.partenza = a.codice or ap.arrivo = a.codice)
+group by a.codice, a.nome;
+
+
+\echo '2) Quanti sono i voli che partono dall''aeroporto ''HTR'' e hanno una durata di almeno 100 minuti?\n'
+
+select count(*) as num_voli
+from Volo v, ArrPart ap
+where v.codice = ap.codice
+  and ap.partenza='HTR'
+  and v.durataminuti >= 100;
+-- Nota bene: avremmo dovuto scrivere select count(distinct v.codice), ma poiche' ogni volo occorre in una e 
+-- una sola ennupla di ArrPart, 'distinct' (costoso!) non e' necessario.
+-- Inoltre, in questo caso, 'count(v.codice)' e' equivalente al piu' efficiente 'count(*)'.
+
+
+\echo '3) Quanti sono gli aeroporti sui quali opera la compagnia ''Apitalia'', per ogni nazione nella quale opera?\n'
+
+select l.nazione, count(distinct a.codice) as num_aerop
+from LuogoAeroporto l, Aeroporto a, Volo v, ArrPart ap
+where l.aeroporto = a.codice
+  and v.codice=ap.codice
+  and (ap.partenza=a.codice or ap.arrivo=a.codice) 
+  and v.comp='Apitalia'
+group by l.nazione;
+
+
+\echo '4) Qual e'' la media, il massimo e il minimo della durata dei voli effettuati dalla compagnia ''MagicFly''?\n'
+
+select AVG(v.durataminuti) as media, MIN(v.durataminuti) as minimo, MAX(v.durataminuti) as massimo
+from Volo v
+where v.comp = 'MagicFly';
+
+
+\echo '5) Qual e'' l''anno di fondazione della compagnia piu'' vecchia che opera in ognuno degli aeroporti?\n'
+
+select a.codice, a.nome, min(c.annofondaz) as anno
+from Aeroporto a, Compagnia c, Volo v, ArrPart ap
+where v.comp=c.nome
+  and ap.codice=v.codice
+  and (a.codice=ap.partenza or a.codice=ap.arrivo)
+group by a.codice, a.nome;
+
+
+\echo '6) Quante sono le nazioni (diverse) raggiungibili da ogni nazione tramite uno o piu'' voli?\n'
+
+select l1.nazione, count (distinct l2.nazione) as raggiungibili
+from LuogoAeroporto l1, LuogoAeroporto l2, Volo v, Aeroporto a1, Aeroporto a2, ArrPart ap
+where l1.aeroporto = a1.codice
+  and l2.aeroporto = a2.codice
+  and l1.nazione <> l2.nazione  
+  and ap.codice = v.codice 
+  and ap.partenza = a1.codice 
+  and ap.arrivo = a2.codice
+group by l1.nazione;
+
+
+\echo '7) Qual e'' la durata media dei voli che partono da ognuno degli aeroporti?\n'
+
+select a.codice, a.nome, avg(v.durataminuti) as media_durata
+from Aeroporto a, Volo v, ArrPart ap
+where v.codice=ap.codice
+  and ap.partenza = a.codice
+group by a.codice, a.nome;
+
+
+\echo '8) Qual e'' la durata complessiva dei voli operati da ognuna delle compagnie fondate a partire dal 1950?\n'
+
+select c.nome, sum(v.durataminuti) as durata_tot
+from Compagnia c, Volo v
+where v.comp = c.nome
+  and annofondaz >= 1950
+group by c.nome;
+
+
+\echo '9) Quali sono gli aeroporti nei quali operano esattamente due compagnie?\n'
+
+select a.codice, a.nome
+from Aeroporto a, Compagnia c, ArrPart ap, Volo v
+where v.comp=c.nome 
+  and ap.codice=v.codice
+  and (a.codice=ap.partenza or a.codice=ap.arrivo) 
+group by a.codice, a.nome
+having count(distinct c.nome) = 2;
+
+-- Nota bene: having count non e' molto efficiente, in quanto la sua esecuzione non viene ottimizzata dal DBMS.
+-- Infatti, i DBMS tipicamente calcolano tutti i gruppi e solo successivamente escludono 
+-- quelli che non rispettano la condizione (controllate come si comporta l'ultima versione di PostgreSQL). 
+-- In questo caso, pero', altre soluzioni sarebbero state ancora meno efficienti (provate a cercare alternative).
+
+
+\echo '10) Quali sono le citta'' con almeno due aeroporti?\n'
+
+select distinct l1.citta
+from LuogoAeroporto l1, LuogoAeroporto l2
+where l1.citta=l2.citta 
+  and l1.aeroporto <> l2.aeroporto;
+
+
+\echo '11) Qual e'' il nome delle compagnie i cui voli hanno una durata media maggiore di 6 ore?\n'
+
+select c.nome as compagnia
+from Compagnia c, Volo v
+where v.comp = c.nome
+group by c.nome
+having avg(v.durataminuti) > 6*60;
+
+
+\echo '12) Qual e'' il nome delle compagnie i cui voli hanno tutti una durata maggiore di 100 minuti?\n'
+
+select c.nome as compagnia
+from Compagnia c, Volo v
+where v.comp = c.nome
+group by c.nome
+having min(v.durataminuti) > 100;
+
+

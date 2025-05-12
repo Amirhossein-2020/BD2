@@ -1,0 +1,95 @@
+\echo '1) Qual è la media e la deviazione standard degli stipendi per ogni categoria di strutturati?\n'
+
+select posizione, avg(stipendio) as media, stddev(stipendio) as dev_standard
+from Persona
+group by posizione;
+
+    
+\echo '2) Quali sono i ricercatori (tutti gli attributi) con uno stipendio superiore alla media della loro categoria?\n'
+
+select ric.*
+from
+	(select avg(stipendio) as stip
+	 from Persona
+	 where posizione = 'Ricercatore'
+	) med,
+	Persona ric
+where ric.posizione = 'Ricercatore'
+  and ric.stipendio > med.stip;
+    
+\echo '3) Per ogni categoria di strutturati quante sono le persone con uno stipendio che differisce di al massimo una deviazione standard dalla media della loro categoria?\n'
+
+with Stats as (
+		select posizione, avg(stipendio) as media, stddev(stipendio) as dev_std
+	 	from Persona
+	 	group by posizione
+)
+select p.posizione, count(*) as numero
+from Stats, Persona p
+where p.posizione = Stats.posizione
+  and p.stipendio between Stats.media - Stats.dev_std and Stats.media + Stats.dev_std
+group by p.posizione;    
+
+\echo '4) Chi sono gli strutturati che hanno lavorato almeno 20 ore complessive in attività progettuali? Restituire tutti i loro dati e il numero di ore lavorate.\n'
+
+select p.*, sum(ap.oreDurata) as ore_lavorate
+from Persona p, AttivitaProgetto ap
+where ap.persona = p.id
+group by p.id, p.nome, p.cognome, p.posizione, p.stipendio
+having sum(ap.oreDurata) >= 20;
+
+\echo '5) Quali sono i progetti la cui durata è superiore alla media delle durate di tutti i progetti? Restituire nome dei progetti e loro durata in giorni.\n'
+
+WITH Stats as (
+	select avg(fine - inizio) as durata_media_giorni
+	from Progetto
+)
+SELECT prj.nome, prj.fine - prj.inizio as durata_giorni
+FROM Progetto prj, Stats
+WHERE prj.fine - prj.inizio > Stats.durata_media_giorni;
+    
+
+
+\echo '6) Quali sono i progetti terminati in data odierna che hanno avuto attività di tipo "Dimostrazione"? Restituire nome di ogni progetto e il numero complessivo delle ore dedicate a tali attività nel progetto.\n'
+
+SELECT prj.id, prj.nome, sum(ap.oreDurata) as ore_dimostrazione
+FROM Progetto prj, AttivitaProgetto ap
+WHERE prj.fine < CURRENT_DATE 
+  AND ap.tipo = 'Dimostrazione'
+  AND ap.progetto = prj.id
+GROUP BY prj.id;
+
+    
+\echo '7) Quali sono i professori ordinari che hanno fatto pi\`u assenze per malattia del numero di assenze medio per malattia dei professori associati? Restituire id, nome e cognome del professore e il numero di giorni di assenza per malattia.\n'
+
+WITH GiorniMalattiaPA AS (
+	-- Prof. associato -> numero di giorni di assenza per malattia
+	SELECT p.id, count(a.*) as num_giorni
+	FROM Persona p, Assenza a
+	WHERE p.id = a.persona
+	  AND p.posizione = 'Professore Associato'
+	  AND a.tipo = 'Malattia'
+	GROUP BY p.id
+),
+StatsPA AS (
+	-- Valore medio del numero di assenze per malattia dei PA
+	SELECT avg(num_giorni) as num_giorni_medio
+	FROM GiorniMalattiaPA
+),
+GiorniMalattiaPO AS (
+	-- Prof. ordinario -> numero di giorni di assenza per malattia
+	SELECT p.id, p.nome, p.cognome, count(a.*) as num_giorni_malattia
+	FROM Persona p, Assenza a
+	WHERE p.posizione = 'Professore Ordinario'
+	  AND a.persona = p.id
+	  AND a.tipo = 'Malattia'
+	GROUP BY p.id, p.nome  
+)	
+-- Prof. ordinario -> numero di giorni di assenza per malattia
+SELECT gmpo.id, gmpo.nome, gmpo.cognome, gmpo.num_giorni_malattia
+FROM GiorniMalattiaPO gmpo, StatsPA
+WHERE gmpo.num_giorni_malattia > StatsPA.num_giorni_medio;
+
+
+
+
